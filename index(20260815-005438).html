@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HP Event Management Prototype</title>
+<style>
+  :root{
+    --hp:#0096d6;
+    --hpd:#006f9f;
+    --soft:#eaf7fc;
+    --line:#d9e3e8;
+    --muted:#667085;
+    --text:#1d2939;
+    --panel:#ffffff;
+    --page:#f7f9fb;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:var(--page);
+    color:var(--text);
+    font-family:Arial, Helvetica, sans-serif;
+  }
+  button,input,select,textarea{font:inherit}
+  button{cursor:pointer}
+  .app{max-width:1400px;margin:0 auto;padding:18px}
+  .space-y-5>*+*{margin-top:20px}
+  .hidden{display:none!important}
+
+  /* EXACT FINALIZED PLANNING STYLES */
+  .header{
+    background:linear-gradient(135deg,var(--hpd),var(--hp));
+    color:white;
+    border-radius:16px;
+    padding:20px;
+  }
+  .header-flex{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .header-title{font-size:21px;font-weight:500;margin-top:4px}
+  .header-sub{font-size:14px;opacity:.9;margin-top:4px}
+  .score-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+  }
+  .score{
+    background:rgba(255,255,255,.15);
+    border-radius:12px;
+    padding:12px;
+  }
+  .score-label{font-size:14px;opacity:.9}
+  .score-value{font-size:20px;font-weight:500;margin-top:4px}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+  }
+  .text-muted{color:var(--muted)}
+  .text-sm{font-size:14px}
+  .font-medium{font-weight:500}
+  .font-semibold{font-weight:600}
+  .mt-1{margin-top:4px}
+  .mt-2{margin-top:8px}
+  .mt-4{margin-top:16px}
+
+  .deadline-grid{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+  }
+  .deadline-box{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+  }
+  .date-shell{
+    margin-top:8px;
+    display:flex;
+    width:100%;
+    min-width:0;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:8px 10px;
+    background:#fff;
+  }
+  .date-shell input{
+    width:100%;
+    min-width:0;
+    border:0;
+    padding:0;
+    background:transparent;
+    color:var(--text);
+  }
+  .bar{
+    height:10px;
+    background:#e7edf1;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:16px;
+  }
+  .bar-fill{
+    height:100%;
+    background:var(--hp);
+    border-radius:999px;
+    transition:width .2s ease;
+  }
+
+  .lifecycle-label{font-size:14px;font-weight:500;margin-bottom:8px}
+  .lifecycle{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:4px;
+  }
+  .flow{
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--muted);
+    white-space:nowrap;
+    border-radius:12px;
+    padding:9px 14px;
+    font-size:14px;
+  }
+  .flow.active{
+    background:var(--hp);
+    border-color:var(--hp);
+    color:white;
+  }
+
+  .planning-heading-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:8px;
+  }
+  .tab-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  .tab-grid + .tab-grid{margin-top:8px}
+  .tab{
+    border:1px solid var(--line);
+    background:var(--panel);
+    text-align:left;
+    border-radius:12px;
+    padding:12px;
+  }
+  .tab.active{
+    background:var(--soft);
+    border-color:var(--hp);
+    color:var(--hpd);
+  }
+  .tab-due{
+    margin-top:4px;
+    font-size:14px;
+    color:var(--muted);
+  }
+
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:16px;
+    font-size:14px;
+    color:var(--muted);
+  }
+  .legend-dot{
+    width:9px;height:9px;border-radius:999px;display:inline-block;margin-right:7px;
+  }
+
+  .panel-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .primary{
+    background:var(--hp);
+    color:#fff;
+    border:0;
+    border-radius:12px;
+    padding:9px 12px;
+    font-size:14px;
+  }
+  .item-list{margin-top:16px}
+  .item-list>*+*{margin-top:8px}
+  .pm-item{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:8px;
+    background:#fff;
+  }
+
+  .task-row{
+    display:grid;
+    grid-template-columns:minmax(130px,1.6fr) minmax(118px,.85fr) minmax(95px,.75fr) 110px 70px;
+    gap:8px;
+    align-items:center;
+    width:100%;
+    min-width:0;
+  }
+  .task-row > *{
+    min-width:0;
+  }
+  .task-title{
+    width:100%;
+    min-width:0;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 9px;
+    font-weight:500;
+    background:#fff;
+    color:var(--text);
+  }
+  .owner-input{
+    width:100%;
+    min-width:0;
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 9px;
+    background:#fff;
+    color:var(--text);
+  }
+
+  .status-wrap{
+    position:relative;
+    display:block;
+    width:100%;
+    min-width:0;
+    padding-bottom:5px;
+  }
+  .status-btn{
+    width:100%;
+    cursor:pointer;
+    font-weight:600;
+    border-radius:12px;
+    padding:9px 12px;
+    transition:transform .12s ease,box-shadow .12s ease;
+  }
+  .status-btn:hover{
+    transform:translateY(-1px);
+    box-shadow:0 1px 4px rgba(0,0,0,.10);
+  }
+  .status-open{background:#f2f4f7;color:#475467;border:1px solid #b9c0ca}
+  .status-progress{background:#eff8ff;color:#175cd3;border:1px solid #84caff}
+  .status-done{background:#ecfdf3;color:#067647;border:1px solid #75e0a7}
+  .status-risk{background:#fff7ed;color:#b54708;border:1px solid #fdba74}
+  .status-closed{background:#ecfdf3;color:#067647;border:1px solid #75e0a7}
+  .mini-track{
+    position:absolute;
+    left:0;right:0;bottom:0;
+    height:4px;
+    background:#e4e7ec;
+    border-radius:0 0 8px 8px;
+    overflow:hidden;
+  }
+  .mini-fill{
+    height:100%;
+    transition:width .2s ease,background .2s ease;
+  }
+  .status-wrap[data-state="open"] .mini-fill{width:15%;background:#98a2b3}
+  .status-wrap[data-state="progress"] .mini-fill{width:55%;background:#2e90fa}
+  .status-wrap[data-state="done"] .mini-fill{width:100%;background:#12b76a}
+  .status-wrap[data-state="mitigated"] .mini-fill{width:55%;background:#f79009}
+  .status-wrap[data-state="closed"] .mini-fill{width:100%;background:#12b76a}
+
+  .delete-btn{
+    width:100%;
+    min-width:0;
+    color:#b42318;
+    background:#fff;
+    border:1px solid #fecdca;
+    cursor:pointer;
+    border-radius:8px;
+    padding:8px 5px;
+    font-size:14px;
+  }
+  .delete-btn.confirming{
+    background:#b42318;
+    color:#fff;
+    border-color:#b42318;
+    font-weight:600;
+  }
+
+  /* ASSIGN ONLY - SEPARATE WORKSPACE */
+  .assign-tabs{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  .assign-tab{
+    border:1px solid var(--line);
+    background:var(--panel);
+    border-radius:12px;
+    padding:11px 12px;
+    text-align:center;
+    font-size:14px;
+  }
+  .assign-tab.active{
+    background:var(--soft);
+    border-color:var(--hp);
+    color:var(--hpd);
+    font-weight:600;
+  }
+  .scroll{overflow-x:auto}
+  .assign-grid{
+    display:grid;
+    grid-template-columns:minmax(220px,1.6fr) 145px 115px 145px 175px 90px;
+    gap:8px;
+    align-items:center;
+    min-width:930px;
+  }
+  .assigned-grid{
+    display:grid;
+    grid-template-columns:minmax(220px,1.6fr) 145px 110px 105px 165px 105px;
+    gap:8px;
+    align-items:center;
+    min-width:900px;
+  }
+  .sales-grid{
+    display:grid;
+    grid-template-columns:minmax(170px,1.3fr) 110px 120px 110px 135px;
+    gap:10px;
+    align-items:center;
+    min-width:700px;
+  }
+  .header-row{
+    padding:0 2px 8px;
+    color:#475467;
+    font-size:14px;
+    font-weight:600;
+  }
+  .assign-input,.assign-select{
+    width:100%;
+    min-width:0;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:8px 9px;
+    background:#fff;
+    color:var(--text);
+  }
+  .owner-pill{
+    background:var(--soft);
+    color:var(--hpd);
+    border:1px solid #b7e5f6;
+    border-radius:999px;
+    padding:6px 10px;
+    display:inline-block;
+  }
+  .priority-high{
+    background:#fff7ed;color:#b54708;border:1px solid #fed7aa;
+    border-radius:999px;padding:6px 10px;display:inline-block;
+  }
+  .priority-critical{
+    background:#fef3f2;color:#b42318;border:1px solid #fecdca;
+    border-radius:999px;padding:6px 10px;display:inline-block;
+  }
+  .priority-normal{
+    background:#eff8ff;color:#175cd3;border:1px solid #b2ddff;
+    border-radius:999px;padding:6px 10px;display:inline-block;
+  }
+  .acceptance{
+    border-radius:10px;
+    padding:8px 10px;
+    text-align:center;
+  }
+  .accepted{
+    background:#ecfdf3;color:#067647;border:1px solid #abefc6;
+  }
+  .assigned-state{
+    background:#f2f4f7;color:#475467;border:1px solid #d0d5dd;
+  }
+  .workbar{
+    height:10px;background:#e7edf1;border-radius:999px;overflow:hidden;
+  }
+  .workfill{
+    height:100%;background:var(--hp);border-radius:999px;
+  }
+
+  @media(min-width:1024px){
+    .header-flex{flex-direction:row;align-items:center;justify-content:space-between}
+  }
+  @media(max-width:1050px) and (min-width:761px){
+    .task-row{
+      grid-template-columns:minmax(115px,1.5fr) 112px 92px 102px 66px;
+      gap:6px;
+    }
+    .status-btn{
+      padding-left:6px;
+      padding-right:6px;
+      font-size:13px;
+    }
+    .delete-btn{
+      font-size:13px;
+      padding-left:3px;
+      padding-right:3px;
+    }
+  }
+
+  @media(max-width:760px){
+    .score-grid{grid-template-columns:repeat(2,1fr)}
+    .deadline-grid{grid-template-columns:1fr}
+    .tab-grid,.assign-tabs{grid-template-columns:repeat(2,1fr)}
+    .task-row{grid-template-columns:1fr 1fr}
+    .task-title{grid-column:1/-1}
+    .status-wrap{width:100%}
+  }
+
+  /* SALES TEAM DASHBOARD - LAYER ABOVE VERSION 1 */
+  .team-dashboard{
+    max-width:1400px;
+    margin:0 auto;
+    padding:18px;
+  }
+  .team-hero{
+    background:linear-gradient(135deg,var(--hpd),var(--hp));
+    color:#fff;
+    border-radius:16px;
+    padding:22px;
+  }
+  .team-hero-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+  }
+  .team-title{font-size:24px;font-weight:600;margin-top:4px}
+  .team-sub{font-size:14px;opacity:.9;margin-top:5px}
+  .team-score-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(115px,1fr));
+    gap:10px;
+  }
+  .team-score{
+    background:rgba(255,255,255,.15);
+    border-radius:12px;
+    padding:12px;
+  }
+  .team-score-label{font-size:13px;opacity:.9}
+  .team-score-value{font-size:22px;font-weight:600;margin-top:5px}
+  .team-toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .profile-grid{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:14px;
+    margin-top:14px;
+  }
+  .profile-card{
+    position:relative;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px;
+    cursor:pointer;
+    transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease;
+  }
+  .profile-card:hover{
+    transform:translateY(-2px);
+    box-shadow:0 6px 18px rgba(0,0,0,.07);
+    border-color:#9edbf3;
+  }
+  .profile-top{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+  }
+  .avatar{
+    width:44px;
+    height:44px;
+    flex:0 0 44px;
+    border-radius:50%;
+    background:var(--soft);
+    border:1px solid #b7e5f6;
+    color:var(--hpd);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+  }
+  .profile-name{font-size:17px;font-weight:600}
+  .profile-role{font-size:13px;color:var(--muted);margin-top:3px}
+  .profile-metrics{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    margin-top:15px;
+  }
+  .profile-metric{
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 7px;
+    text-align:center;
+  }
+  .profile-metric .n{font-weight:700;font-size:17px}
+  .profile-metric .l{font-size:11px;color:var(--muted);margin-top:2px}
+  .profile-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:14px;
+  }
+  .edit-profile,.delete-profile{
+    border-radius:9px;
+    padding:7px 10px;
+    font-size:13px;
+  }
+  .edit-profile{
+    border:1px solid var(--line);
+    background:#fff;
+    color:#475467;
+  }
+  .delete-profile{
+    border:1px solid #fecdca;
+    background:#fff;
+    color:#b42318;
+  }
+  .profile-hint{
+    margin-top:11px;
+    padding-top:11px;
+    border-top:1px solid #eef2f4;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .profile-context{
+    max-width:1400px;
+    margin:0 auto;
+    padding:16px 18px 0;
+  }
+  .profile-context-bar{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:11px 13px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .back-team{
+    border:1px solid var(--line);
+    background:#fff;
+    color:var(--hpd);
+    border-radius:10px;
+    padding:8px 11px;
+    font-weight:600;
+  }
+  .selected-profile{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .selected-profile .avatar{width:34px;height:34px;flex-basis:34px;font-size:13px}
+  .selected-profile-name{font-weight:600}
+  .selected-profile-role{font-size:12px;color:var(--muted);margin-top:2px}
+  .modal-backdrop{
+    position:fixed;
+    inset:0;
+    background:rgba(16,24,40,.42);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    z-index:1000;
+  }
+  .profile-modal{
+    width:min(520px,100%);
+    background:#fff;
+    border-radius:16px;
+    border:1px solid var(--line);
+    padding:18px;
+    box-shadow:0 20px 60px rgba(0,0,0,.18);
+  }
+  .modal-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:14px;
+  }
+  .modal-grid label{font-size:13px;color:#475467}
+  .modal-grid input{
+    width:100%;
+    margin-top:5px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:9px 10px;
+  }
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:16px;
+  }
+  .secondary-btn{
+    border:1px solid var(--line);
+    background:#fff;
+    color:#475467;
+    border-radius:10px;
+    padding:9px 12px;
+  }
+  @media(max-width:1000px){
+    .profile-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .team-score-grid{grid-template-columns:repeat(2,minmax(115px,1fr))}
+  }
+  @media(max-width:650px){
+    .profile-grid{grid-template-columns:1fr}
+    .profile-metrics{grid-template-columns:repeat(2,1fr)}
+    .modal-grid{grid-template-columns:1fr}
+  }
+
+</style>
+</head>
+
+<body>
+
+<div id="salesTeamDashboard" class="team-dashboard space-y-5">
+  <section class="team-hero">
+    <div class="team-hero-row">
+      <div>
+        <div class="text-sm" style="opacity:.9">HP Event Management</div>
+        <div class="team-title">Sales Team Dashboard</div>
+        <div class="team-sub">Select a salesperson to open their event management workspace.</div>
+      </div>
+      <div class="team-score-grid">
+        <div class="team-score"><div class="team-score-label">Salespeople</div><div id="teamCount" class="team-score-value">0</div></div>
+        <div class="team-score"><div class="team-score-label">Active Events</div><div id="teamEvents" class="team-score-value">0</div></div>
+        <div class="team-score"><div class="team-score-label">Open Tasks</div><div id="teamTasks" class="team-score-value">0</div></div>
+        <div class="team-score"><div class="team-score-label">Critical Items</div><div id="teamCritical" class="team-score-value">0</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="team-toolbar">
+      <div>
+        <div class="font-medium">Sales Profiles</div>
+        <div class="mt-1 text-sm text-muted">Create a profile for each salesperson. Click a profile to open Version 1.</div>
+      </div>
+      <button id="addProfileBtn" class="primary" type="button">+ Add Salesperson</button>
+    </div>
+    <div id="profileGrid" class="profile-grid"></div>
+  </section>
+</div>
+
+<div id="profileWorkspace" class="hidden">
+  <div class="profile-context">
+    <div class="profile-context-bar">
+      <button id="backToTeam" class="back-team" type="button">← Sales Team Dashboard</button>
+      <div class="selected-profile">
+        <div id="selectedAvatar" class="avatar">SM</div>
+        <div>
+          <div id="selectedProfileName" class="selected-profile-name">Sarah Mitchell</div>
+          <div id="selectedProfileRole" class="selected-profile-role">Enterprise Sales</div>
+        </div>
+      </div>
+    </div>
+  </div>
+<div id="hp-event-pm-v6" class="app space-y-5">
+
+  <section class="header">
+    <div class="header-flex">
+      <div>
+        <div class="text-sm" style="opacity:.9">HP Event Management</div>
+        <div id="workspaceTitle" class="header-title">Planning Workspace</div>
+        <div id="workspaceSubtitle" class="header-sub">Plan, assign ownership, set deadlines and track readiness before the event.</div>
+      </div>
+
+      <div id="planningScorecards" class="score-grid">
+        <div class="score"><div class="score-label">Event Date</div><div class="score-value">Sep 12</div></div>
+        <div class="score"><div class="score-label">Planning Due</div><div class="score-value">Aug 22</div></div>
+        <div class="score"><div class="score-label">Days Left</div><div class="score-value">8</div></div>
+        <div class="score"><div class="score-label">Readiness</div><div id="readiness" class="score-value">0%</div></div>
+      </div>
+
+      <div id="assignScorecards" class="score-grid hidden">
+        <div class="score"><div class="score-label">Assigned</div><div id="score-assigned" class="score-value">3</div></div>
+        <div class="score"><div class="score-label">Unassigned</div><div id="score-unassigned" class="score-value">3</div></div>
+        <div class="score"><div class="score-label">Due This Week</div><div class="score-value">5</div></div>
+        <div class="score"><div class="score-label">Critical</div><div id="score-critical" class="score-value">1</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="font-medium">Planning Completion Deadline</div>
+    <div class="mt-1 text-sm text-muted">All major planning sections should be ready before execution begins.</div>
+    <div class="deadline-grid">
+      <label class="deadline-box text-sm">
+        <span class="text-muted">Planning must be complete by</span>
+        <span class="date-shell"><input type="date" value="2026-08-22"></span>
+      </label>
+      <div class="deadline-box">
+        <div class="text-sm text-muted">Items Complete</div>
+        <div class="mt-2" style="font-size:20px;font-weight:500"><span id="done-count">0</span> / <span id="total-count">0</span></div>
+      </div>
+      <div class="deadline-box">
+        <div class="text-sm text-muted">Needs Attention</div>
+        <div id="attention-count" class="mt-2" style="font-size:20px;font-weight:500">0</div>
+      </div>
+    </div>
+    <div class="bar"><div id="readiness-bar" class="bar-fill" style="width:0%"></div></div>
+  </section>
+
+  <section>
+    <div class="lifecycle-label">Project Management Lifecycle</div>
+    <div class="lifecycle">
+      <button id="planningNav" class="flow active">1. Planning</button>
+      <button id="assignNav" class="flow">2. Assign</button>
+      <button class="flow">3. Track</button>
+      <button class="flow">4. Identify Risk</button>
+      <button class="flow">5. Coordinate</button>
+      <button class="flow">6. Escalate</button>
+      <button class="flow">7. Correct</button>
+      <button class="flow">8. Close</button>
+    </div>
+  </section>
+
+  <!-- FINALIZED PLANNING, UNCHANGED -->
+  <div id="planningWorkspace" class="space-y-5">
+    <section>
+      <div class="planning-heading-row">
+        <div class="text-sm font-medium">Planning Sections & Deadlines</div>
+        <div class="text-sm text-muted">Today: Aug 14, 2026</div>
+      </div>
+
+      <div class="tab-grid">
+        <button class="tab planning-tab active" data-tab="overview"><div class="font-medium">Event Overview</div><div class="tab-due">Due Aug 15</div></button>
+        <button class="tab planning-tab" data-tab="goals"><div class="font-medium">Goals & Targets</div><div class="tab-due">Due Aug 16</div></button>
+        <button class="tab planning-tab" data-tab="audience"><div class="font-medium">Audience</div><div class="tab-due">Due Aug 17</div></button>
+        <button class="tab planning-tab" data-tab="team"><div class="font-medium">Team & Communication</div><div class="tab-due">Due Aug 18</div></button>
+      </div>
+
+      <div class="tab-grid">
+        <button class="tab planning-tab" data-tab="timeline"><div class="font-medium">Timeline</div><div class="tab-due">Due Aug 19</div></button>
+        <button class="tab planning-tab" data-tab="activities"><div class="font-medium">Key Activities</div><div class="tab-due">Due Aug 20</div></button>
+        <button class="tab planning-tab" data-tab="logistics"><div class="font-medium">Event Logistics</div><div class="tab-due">Due Aug 21</div></button>
+        <button class="tab planning-tab" data-tab="risks"><div class="font-medium">Risk Planning</div><div class="tab-due">Due Aug 22</div></button>
+      </div>
+    </section>
+
+    <div class="legend">
+      <span><span class="legend-dot" style="background:#98a2b3"></span>Open</span>
+      <span><span class="legend-dot" style="background:#2e90fa"></span>In Progress</span>
+      <span><span class="legend-dot" style="background:#12b76a"></span>Completed / Closed</span>
+      <span><span class="legend-dot" style="background:#f79009"></span>Mitigated Risk</span>
+      <span>Click the status button to move it to the next stage.</span>
+    </div>
+
+    <section class="card planning-panel" data-panel="overview">
+      <div class="panel-head">
+        <div><div class="font-medium">Event Overview</div><div class="mt-1 text-sm text-muted">Core event details.</div></div>
+        <button class="primary add-btn" data-add="overview">+ Add Detail</button>
+      </div>
+      <div id="overview-list" class="item-list"></div>
+    </section>
+
+    <section class="card planning-panel hidden" data-panel="goals">
+      <div class="panel-head">
+        <div><div class="font-medium">Goals & Targets</div><div class="mt-1 text-sm text-muted">Define measurable outcomes.</div></div>
+        <button class="primary add-btn" data-add="goals">+ Add Target</button>
+      </div>
+      <div id="goals-list" class="item-list"></div>
+    </section>
+
+    <section class="card planning-panel hidden" data-panel="audience">
+      <div class="panel-head">
+        <div><div class="font-medium">Audience</div><div class="mt-1 text-sm text-muted">Define who Sales and Marketing should target.</div></div>
+        <button class="primary add-btn" data-add="audience">+ Add Audience Item</button>
+      </div>
+      <div id="audience-list" class="item-list"></div>
+    </section>
+
+    <section class="card planning-panel hidden" data-panel="team">
+      <div class="panel-head">
+        <div><div class="font-medium">Team & Communication</div><div class="mt-1 text-sm text-muted">Confirm ownership and responsibilities.</div></div>
+        <button class="primary add-btn" data-add="team">+ Add Person</button>
+      </div>
+      <div id="team-list" class="item-list"></div>
+    </section>
+
+    <section class="card planning-panel hidden" data-panel="timeline">
+      <div class="panel-head">
+        <div><div class="font-medium">Timeline & Milestones</div><div class="mt-1 text-sm text-muted">Milestone, date, owner and status stay on one row.</div></div>
+        <button class="primary add-btn" data-add="timeline">+ Add Milestone</button>
+      </div>
+      <div id="timeline-list" class="item-list"></div>
+    </section>
+
+    <section class="card planning-panel hidden" data-panel="activities">
+      <div class="panel-head">
+        <div><div class="font-medium">Key Activities</div><div class="mt-1 text-sm text-muted">Important pre-event work.</div></div>
+        <button class="primary add-btn" data-add="activities">+ Add Activity</button>
+      </div>
+      <div id="activities-list" class="item-list"></div>
+    </section>
+
+    <section class="card planning-panel hidden" data-panel="logistics">
+      <div class="panel-head">
+        <div><div class="font-medium">Event Logistics</div><div class="mt-1 text-sm text-muted">Operational readiness and deadlines.</div></div>
+        <button class="primary add-btn" data-add="logistics">+ Add Logistics Item</button>
+      </div>
+      <div id="logistics-list" class="item-list"></div>
+    </section>
+
+    <section class="card planning-panel hidden" data-panel="risks">
+      <div class="panel-head">
+        <div><div class="font-medium">Risk Planning</div><div class="mt-1 text-sm text-muted">Risks move from Open to Mitigated to Closed.</div></div>
+        <button class="primary add-btn" data-add="risks">+ Add Risk</button>
+      </div>
+      <div id="risks-list" class="item-list"></div>
+    </section>
+
+    <div id="planning-feedback" class="text-sm text-muted" aria-live="polite"></div>
+  </div>
+
+  <!-- ASSIGN ADDED SEPARATELY -->
+  <div id="assignWorkspace" class="space-y-5 hidden">
+
+    <section class="assign-tabs">
+      <button class="assign-tab active" data-assign-tab="unassigned">Unassigned Tasks</button>
+      <button class="assign-tab" data-assign-tab="assigned">Assigned Tasks</button>
+      <button class="assign-tab" data-assign-tab="sales">Sales Responsibilities</button>
+      <button class="assign-tab" data-assign-tab="workload">Team Workload</button>
+    </section>
+
+    <section class="card assign-panel" data-assign-panel="unassigned">
+      <div class="panel-head">
+        <div><div class="font-medium">Unassigned Tasks</div><div class="mt-1 text-sm text-muted">Tasks awaiting assignment.</div></div>
+        <button id="add-unassigned" class="primary">+ Add Task</button>
+      </div>
+
+      <div class="scroll mt-4">
+        <div class="assign-grid header-row">
+          <span>Task</span><span>Assign To</span><span>Priority</span><span>Due Date</span><span>Keep Informed</span><span></span>
+        </div>
+        <div id="unassigned-list" class="item-list"></div>
+      </div>
+      <div id="assign-feedback" class="text-sm text-muted mt-2"></div>
+    </section>
+
+    <section class="card assign-panel hidden" data-assign-panel="assigned">
+      <div class="font-medium">Assigned Tasks</div>
+      <div class="mt-1 text-sm text-muted">Each assignment stays on a single row.</div>
+
+      <div class="scroll mt-4">
+        <div class="assigned-grid header-row">
+          <span>Task</span><span>Owner</span><span>Priority</span><span>Due</span><span>Notify</span><span>Acceptance</span>
+        </div>
+        <div id="assigned-list" class="item-list"></div>
+      </div>
+    </section>
+
+    <section class="card assign-panel hidden" data-assign-panel="sales">
+      <div class="panel-head">
+        <div><div class="font-medium">Sales Responsibilities</div><div class="mt-1 text-sm text-muted">Individual sales commitments and progress.</div></div>
+        <button id="add-salesperson" class="primary">+ Add Salesperson</button>
+      </div>
+
+      <div class="scroll mt-4">
+        <div class="sales-grid header-row">
+          <span>Salesperson</span><span>Accounts</span><span>Registrations</span><span>Meetings</span><span>Status</span>
+        </div>
+        <div id="sales-list" class="item-list"></div>
+      </div>
+
+      <div class="legend mt-4">
+        <span><span class="legend-dot" style="background:#98a2b3"></span>Open</span>
+        <span><span class="legend-dot" style="background:#2e90fa"></span>In Progress</span>
+        <span><span class="legend-dot" style="background:#12b76a"></span>Completed</span>
+      </div>
+    </section>
+
+    <section class="card assign-panel hidden" data-assign-panel="workload">
+      <div class="font-medium">Team Workload</div>
+      <div class="mt-1 text-sm text-muted">Check whether assignments are balanced.</div>
+
+      <div class="mt-4">
+        <div style="margin-bottom:18px">
+          <div class="text-sm" style="display:flex;justify-content:space-between"><span><b>Sales</b> · 9 assignments</span><span>75%</span></div>
+          <div class="workbar mt-2"><div class="workfill" style="width:75%"></div></div>
+        </div>
+        <div style="margin-bottom:18px">
+          <div class="text-sm" style="display:flex;justify-content:space-between"><span><b>Marketing</b> · 6 assignments</span><span>58%</span></div>
+          <div class="workbar mt-2"><div class="workfill" style="width:58%"></div></div>
+        </div>
+        <div>
+          <div class="text-sm" style="display:flex;justify-content:space-between"><span><b>Operations</b> · 8 assignments</span><span>88%</span></div>
+          <div class="workbar mt-2"><div class="workfill" style="width:88%"></div></div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="profileModalBackdrop" class="modal-backdrop hidden" aria-hidden="true">
+  <div class="profile-modal">
+    <div class="font-medium" id="profileModalTitle">Add Salesperson</div>
+    <div class="mt-1 text-sm text-muted">Profile details can be edited later.</div>
+    <div class="modal-grid">
+      <label>Name<input id="profileNameInput" type="text" placeholder="Salesperson name"></label>
+      <label>Role<input id="profileRoleInput" type="text" placeholder="e.g. Enterprise Sales"></label>
+      <label>Active Events<input id="profileEventsInput" type="number" min="0" value="1"></label>
+      <label>Open Tasks<input id="profileTasksInput" type="number" min="0" value="0"></label>
+      <label>Critical Items<input id="profileCriticalInput" type="number" min="0" value="0"></label>
+      <label>Readiness %<input id="profileReadinessInput" type="number" min="0" max="100" value="0"></label>
+    </div>
+    <div class="modal-actions">
+      <button id="cancelProfileBtn" class="secondary-btn" type="button">Cancel</button>
+      <button id="saveProfileBtn" class="primary" type="button">Save Profile</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const root=document.getElementById('hp-event-pm-v6');
+
+/* Workspace navigation */
+const planningNav=root.querySelector('#planningNav');
+const assignNav=root.querySelector('#assignNav');
+const planningWorkspace=root.querySelector('#planningWorkspace');
+const assignWorkspace=root.querySelector('#assignWorkspace');
+const planningScorecards=root.querySelector('#planningScorecards');
+const assignScorecards=root.querySelector('#assignScorecards');
+const workspaceTitle=root.querySelector('#workspaceTitle');
+const workspaceSubtitle=root.querySelector('#workspaceSubtitle');
+
+function switchWorkspace(mode){
+  const isPlanning=mode==='planning';
+  planningWorkspace.classList.toggle('hidden',!isPlanning);
+  assignWorkspace.classList.toggle('hidden',isPlanning);
+  planningScorecards.classList.toggle('hidden',!isPlanning);
+  assignScorecards.classList.toggle('hidden',isPlanning);
+  planningNav.classList.toggle('active',isPlanning);
+  assignNav.classList.toggle('active',!isPlanning);
+
+  workspaceTitle.textContent=isPlanning?'Planning Workspace':'Assignment Workspace';
+  workspaceSubtitle.textContent=isPlanning
+    ?'Plan, assign ownership, set deadlines and track readiness before the event.'
+    :'Turn planned work into clear individual ownership before execution begins.';
+}
+planningNav.addEventListener('click',()=>switchWorkspace('planning'));
+assignNav.addEventListener('click',()=>switchWorkspace('assign'));
+
+/* Planning tabs */
+const planningTabs=[...root.querySelectorAll('.planning-tab')];
+const planningPanels=[...root.querySelectorAll('.planning-panel')];
+planningTabs.forEach(btn=>btn.addEventListener('click',()=>{
+  planningTabs.forEach(b=>b.classList.toggle('active',b===btn));
+  planningPanels.forEach(p=>p.classList.toggle('hidden',p.dataset.panel!==btn.dataset.tab));
+}));
+
+/* Finalized planning sample data */
+const seed={
+  overview:[['Event name confirmed','PM','2026-08-15','done'],['Date & location confirmed','PM','2026-08-15','done']],
+  goals:[['Registration target: 250','Sales + PM','2026-08-16','done'],['Qualified lead target: 80','Sales','2026-08-16','done']],
+  audience:[['Priority accounts identified','Sales','2026-08-17','progress']],
+  team:[['Sarah Mitchell • Sales Manager','Sales','2026-08-18','done'],['Event Operations','Operations','2026-08-18','progress']],
+  timeline:[['Registration campaign launch','Marketing','2026-08-26','open'],['Booth & demo readiness','Operations','2026-09-02','progress'],['Final readiness review','PM','2026-09-05','open']],
+  activities:[['Send customer invitations','Sarah M.','2026-08-25','progress'],['Launch event email campaign','Marketing','2026-08-26','open']],
+  logistics:[['Booth space confirmed','Operations','2026-08-18','done'],['Demo equipment tested','Mike T.','2026-09-02','open'],['Flights & hotels booked','Admin','2026-08-30','done']],
+  risks:[['Registration pace below target','Sarah M.','2026-08-20','open'],['Late booth shipment','Operations','2026-09-03','mitigated']]
+};
+
+function esc(v){
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function statusMarkup(state,isRisk=false){
+  const label=isRisk
+    ?(state==='closed'?'Closed':state==='mitigated'?'Mitigated':'Open')
+    :(state==='done'?'Completed':state==='progress'?'In Progress':'Open');
+
+  const cls=isRisk
+    ?(state==='closed'?'status-closed':state==='mitigated'?'status-progress':'status-risk')
+    :(state==='done'?'status-done':state==='progress'?'status-progress':'status-open');
+
+  const btnClass=isRisk?'risk-status':'task-status';
+
+  return `<div class="status-wrap" data-state="${state}">
+    <button class="status-btn ${btnClass} ${cls}" data-state="${state}" type="button">${label}</button>
+    <div class="mini-track"><div class="mini-fill"></div></div>
+  </div>`;
+}
+
+function taskItem(title,owner,date,state='open'){
+  return `<div class="pm-item" data-type="task" data-state="${state}">
+    <div class="task-row">
+      <input class="task-title" value="${esc(title)}">
+      <span class="date-shell" style="margin-top:0"><input class="due-date" type="date" value="${date||''}"></span>
+      <input class="owner-input" value="${esc(owner)}">
+      ${statusMarkup(state,false)}
+      <button class="delete-btn" data-confirm="no" type="button">Delete</button>
+    </div>
+  </div>`;
+}
+
+function riskItem(title,owner,date,state='open'){
+  return `<div class="pm-item" data-type="risk" data-state="${state}">
+    <div class="task-row">
+      <input class="task-title" value="${esc(title)}">
+      <span class="date-shell" style="margin-top:0"><input class="due-date" type="date" value="${date||''}"></span>
+      <input class="owner-input" value="${esc(owner)}">
+      ${statusMarkup(state,true)}
+      <button class="delete-btn" data-confirm="no" type="button">Delete</button>
+    </div>
+  </div>`;
+}
+
+Object.entries(seed).forEach(([type,items])=>{
+  const list=root.querySelector('#'+type+'-list');
+  items.forEach(item=>list.insertAdjacentHTML('beforeend',type==='risks'?riskItem(...item):taskItem(...item)));
+});
+
+function cycleTask(btn){
+  const item=btn.closest('.pm-item');
+  const wrap=btn.closest('.status-wrap');
+  const current=btn.dataset.state;
+  let next='open';
+  if(current==='open')next='progress';
+  else if(current==='progress')next='done';
+  else next='open';
+
+  btn.dataset.state=next;
+  item.dataset.state=next;
+  wrap.dataset.state=next;
+
+  btn.classList.remove('status-open','status-progress','status-done');
+  if(next==='open'){btn.textContent='Open';btn.classList.add('status-open')}
+  if(next==='progress'){btn.textContent='In Progress';btn.classList.add('status-progress')}
+  if(next==='done'){btn.textContent='Completed';btn.classList.add('status-done')}
+  updateReadiness();
+}
+
+function cycleRisk(btn){
+  const item=btn.closest('.pm-item');
+  const wrap=btn.closest('.status-wrap');
+  const current=btn.dataset.state;
+  let next='open';
+  if(current==='open')next='mitigated';
+  else if(current==='mitigated')next='closed';
+  else next='open';
+
+  btn.dataset.state=next;
+  item.dataset.state=next;
+  wrap.dataset.state=next;
+
+  btn.classList.remove('status-risk','status-progress','status-closed');
+  if(next==='open'){btn.textContent='Open';btn.classList.add('status-risk')}
+  if(next==='mitigated'){btn.textContent='Mitigated';btn.classList.add('status-progress')}
+  if(next==='closed'){btn.textContent='Closed';btn.classList.add('status-closed')}
+  updateReadiness();
+}
+
+function updateReadiness(){
+  const items=[...root.querySelectorAll('#planningWorkspace .pm-item')];
+  let complete=0,attention=0;
+
+  items.forEach(item=>{
+    const state=item.dataset.state;
+    const done=item.dataset.type==='risk'?state==='closed':state==='done';
+    done?complete++:attention++;
+  });
+
+  const pct=items.length?Math.round((complete/items.length)*100):0;
+  root.querySelector('#done-count').textContent=complete;
+  root.querySelector('#total-count').textContent=items.length;
+  root.querySelector('#attention-count').textContent=attention;
+  root.querySelector('#readiness').textContent=pct+'%';
+  root.querySelector('#readiness-bar').style.width=pct+'%';
+}
+
+root.querySelector('#planningWorkspace').addEventListener('click',e=>{
+  const taskBtn=e.target.closest('.task-status');
+  if(taskBtn){cycleTask(taskBtn);return;}
+
+  const riskBtn=e.target.closest('.risk-status');
+  if(riskBtn){cycleRisk(riskBtn);return;}
+
+  const deleteBtn=e.target.closest('.delete-btn');
+  if(deleteBtn){
+    if(deleteBtn.dataset.confirm==='no'){
+      root.querySelectorAll('#planningWorkspace .delete-btn.confirming').forEach(b=>{
+        b.dataset.confirm='no';
+        b.textContent='Delete';
+        b.classList.remove('confirming');
+      });
+      deleteBtn.dataset.confirm='yes';
+      deleteBtn.textContent='Confirm';
+      deleteBtn.classList.add('confirming');
+      root.querySelector('#planning-feedback').textContent='Click Confirm to remove this entry.';
+    }else{
+      deleteBtn.closest('.pm-item').remove();
+      root.querySelector('#planning-feedback').textContent='Entry deleted.';
+      updateReadiness();
+    }
+  }
+});
+
+const addDefaults={
+  overview:['New event detail','PM'],
+  goals:['New target','PM'],
+  audience:['New audience item','Sales + Marketing'],
+  team:['New team member','Unassigned'],
+  timeline:['New milestone','PM'],
+  activities:['New activity','Unassigned'],
+  logistics:['New logistics item','Operations']
+};
+
+root.querySelectorAll('.add-btn').forEach(btn=>btn.addEventListener('click',()=>{
+  const type=btn.dataset.add;
+  const list=root.querySelector('#'+type+'-list');
+
+  if(type==='risks'){
+    list.insertAdjacentHTML('beforeend',riskItem('New risk','PM','','open'));
+  }else{
+    const [title,owner]=addDefaults[type];
+    list.insertAdjacentHTML('beforeend',taskItem(title,owner,'','open'));
+  }
+
+  root.querySelector('#planning-feedback').textContent='New entry added. Set the due date, owner and status.';
+  updateReadiness();
+}));
+
+/* Assign tabs */
+const assignTabs=[...root.querySelectorAll('.assign-tab')];
+const assignPanels=[...root.querySelectorAll('.assign-panel')];
+
+assignTabs.forEach(btn=>btn.addEventListener('click',()=>{
+  assignTabs.forEach(b=>b.classList.toggle('active',b===btn));
+  assignPanels.forEach(p=>p.classList.toggle('hidden',p.dataset.assignPanel!==btn.dataset.assignTab));
+}));
+
+/* Assign items */
+function unassignedItem(title,priority,date,notify){
+  return `<div class="pm-item unassigned-item">
+    <div class="assign-grid">
+      <input class="assign-input a-title" value="${esc(title)}">
+      <select class="assign-select a-person">
+        <option value="">Select person</option>
+        <option>Emma Chen</option>
+        <option>Sarah Mitchell</option>
+        <option>Mike Turner</option>
+        <option>Daniel Ross</option>
+      </select>
+      <select class="assign-select a-priority">
+        <option ${priority==='Normal'?'selected':''}>Normal</option>
+        <option ${priority==='High'?'selected':''}>High</option>
+        <option ${priority==='Critical'?'selected':''}>Critical</option>
+      </select>
+      <span class="date-shell" style="margin-top:0"><input class="a-due" type="date" value="${date||''}"></span>
+      <input class="assign-input a-notify" value="${esc(notify)}">
+      <button class="primary assign-task">Assign</button>
+    </div>
+  </div>`;
+}
+
+[
+  ['Launch registration reminder campaign','High','2026-08-26','PM + Sales Manager'],
+  ['Test demo equipment','Critical','2026-09-02','PM + Operations'],
+  ['Prepare final attendee briefing','Normal','2026-09-05','All Team Leads']
+].forEach(x=>root.querySelector('#unassigned-list').insertAdjacentHTML('beforeend',unassignedItem(...x)));
+
+function priorityClass(priority){
+  if(priority==='Critical')return'priority-critical';
+  if(priority==='High')return'priority-high';
+  return'priority-normal';
+}
+
+function formatDate(value){
+  if(!value)return'No date';
+  return new Date(value+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+function assignedItem(title,owner,priority,date,notify,state='assigned'){
+  return `<div class="pm-item assigned-item">
+    <div class="assigned-grid">
+      <strong>${esc(title)}</strong>
+      <span class="owner-pill">${esc(owner)}</span>
+      <span class="${priorityClass(priority)}">${priority}</span>
+      <span class="text-sm">${formatDate(date)}</span>
+      <span class="text-sm">${esc(notify)}</span>
+      <button class="acceptance ${state==='accepted'?'accepted':'assigned-state'}" data-state="${state}">${state==='accepted'?'Accepted':'Assigned'}</button>
+    </div>
+  </div>`;
+}
+
+[
+  ['Send customer invitations','Sarah Mitchell','High','2026-08-25','PM + Marketing','accepted'],
+  ['Booth shipment coordination','Mike Turner','Critical','2026-09-03','PM + Venue','assigned'],
+  ['Prepare event collateral','Emma Chen','Normal','2026-08-29','PM','accepted']
+].forEach(x=>root.querySelector('#assigned-list').insertAdjacentHTML('beforeend',assignedItem(...x)));
+
+function salesItem(name,accounts,registrations,meetings,state){
+  const label=state==='done'?'Completed':state==='progress'?'In Progress':'Open';
+  const cls=state==='done'?'status-done':state==='progress'?'status-progress':'status-open';
+
+  return `<div class="pm-item sales-item">
+    <div class="sales-grid">
+      <input class="assign-input sales-name" value="${esc(name)}">
+      <input class="assign-input" type="number" value="${accounts}">
+      <input class="assign-input" type="number" value="${registrations}">
+      <input class="assign-input" type="number" value="${meetings}">
+      <div class="status-wrap" data-state="${state}">
+        <button class="status-btn sales-status ${cls}" data-state="${state}">${label}</button>
+        <div class="mini-track"><div class="mini-fill"></div></div>
+      </div>
+    </div>
+  </div>`;
+}
+
+[
+  ['Sarah Mitchell',40,30,8,'done'],
+  ['Daniel Ross',35,25,6,'progress'],
+  ['Priya Shah',50,40,10,'open']
+].forEach(x=>root.querySelector('#sales-list').insertAdjacentHTML('beforeend',salesItem(...x)));
+
+function updateAssignScores(){
+  root.querySelector('#score-unassigned').textContent=root.querySelectorAll('#unassigned-list .unassigned-item').length;
+  root.querySelector('#score-assigned').textContent=root.querySelectorAll('#assigned-list .assigned-item').length;
+  root.querySelector('#score-critical').textContent=[...root.querySelectorAll('#assigned-list .assigned-item')].filter(i=>i.querySelector('.priority-critical')).length;
+}
+
+root.querySelector('#add-unassigned').addEventListener('click',()=>{
+  root.querySelector('#unassigned-list').insertAdjacentHTML('beforeend',unassignedItem('New task','Normal','','PM'));
+  updateAssignScores();
+});
+
+root.querySelector('#add-salesperson').addEventListener('click',()=>{
+  root.querySelector('#sales-list').insertAdjacentHTML('beforeend',salesItem('New salesperson',0,0,0,'open'));
+});
+
+root.querySelector('#assignWorkspace').addEventListener('click',e=>{
+  const assignBtn=e.target.closest('.assign-task');
+  if(assignBtn){
+    const row=assignBtn.closest('.unassigned-item');
+    const person=row.querySelector('.a-person').value;
+
+    if(!person){
+      root.querySelector('#assign-feedback').textContent='Select a person before assigning the task.';
+      return;
+    }
+
+    const title=row.querySelector('.a-title').value;
+    const priority=row.querySelector('.a-priority').value;
+    const due=row.querySelector('.a-due').value;
+    const notify=row.querySelector('.a-notify').value;
+
+    root.querySelector('#assigned-list').insertAdjacentHTML('beforeend',assignedItem(title,person,priority,due,notify,'assigned'));
+    row.remove();
+    root.querySelector('#assign-feedback').textContent=title+' assigned to '+person+'.';
+    updateAssignScores();
+    return;
+  }
+
+  const acceptance=e.target.closest('.acceptance');
+  if(acceptance){
+    const isAccepted=acceptance.dataset.state==='accepted';
+    acceptance.dataset.state=isAccepted?'assigned':'accepted';
+    acceptance.textContent=isAccepted?'Assigned':'Accepted';
+    acceptance.classList.toggle('accepted',!isAccepted);
+    acceptance.classList.toggle('assigned-state',isAccepted);
+    return;
+  }
+
+  const salesStatus=e.target.closest('.sales-status');
+  if(salesStatus){
+    const wrap=salesStatus.closest('.status-wrap');
+    const current=salesStatus.dataset.state;
+    const next=current==='open'?'progress':current==='progress'?'done':'open';
+
+    salesStatus.dataset.state=next;
+    wrap.dataset.state=next;
+
+    salesStatus.classList.remove('status-open','status-progress','status-done');
+    if(next==='open'){salesStatus.textContent='Open';salesStatus.classList.add('status-open')}
+    if(next==='progress'){salesStatus.textContent='In Progress';salesStatus.classList.add('status-progress')}
+    if(next==='done'){salesStatus.textContent='Completed';salesStatus.classList.add('status-done')}
+  }
+});
+
+updateReadiness();
+updateAssignScores();
+
+
+/* SALES PROFILE DASHBOARD - LAYER ABOVE VERSION 1 */
+const salesTeamDashboard=document.getElementById('salesTeamDashboard');
+const profileWorkspace=document.getElementById('profileWorkspace');
+const profileGrid=document.getElementById('profileGrid');
+const backToTeam=document.getElementById('backToTeam');
+const selectedAvatar=document.getElementById('selectedAvatar');
+const selectedProfileName=document.getElementById('selectedProfileName');
+const selectedProfileRole=document.getElementById('selectedProfileRole');
+
+const modalBackdrop=document.getElementById('profileModalBackdrop');
+const modalTitle=document.getElementById('profileModalTitle');
+const profileNameInput=document.getElementById('profileNameInput');
+const profileRoleInput=document.getElementById('profileRoleInput');
+const profileEventsInput=document.getElementById('profileEventsInput');
+const profileTasksInput=document.getElementById('profileTasksInput');
+const profileCriticalInput=document.getElementById('profileCriticalInput');
+const profileReadinessInput=document.getElementById('profileReadinessInput');
+const saveProfileBtn=document.getElementById('saveProfileBtn');
+const cancelProfileBtn=document.getElementById('cancelProfileBtn');
+const addProfileBtn=document.getElementById('addProfileBtn');
+
+let editingProfileId=null;
+let profiles=[
+  {id:'sarah',name:'Sarah Mitchell',role:'Enterprise Sales',events:3,tasks:7,critical:1,readiness:72},
+  {id:'daniel',name:'Daniel Ross',role:'Commercial Sales',events:2,tasks:5,critical:0,readiness:81},
+  {id:'priya',name:'Priya Shah',role:'Strategic Accounts',events:4,tasks:9,critical:2,readiness:64},
+  {id:'emma',name:'Emma Chen',role:'Regional Sales',events:2,tasks:4,critical:0,readiness:88}
+];
+
+function profileInitials(name){
+  return name.trim().split(/\s+/).slice(0,2).map(x=>x[0]?.toUpperCase()||'').join('')||'SP';
+}
+
+function renderProfiles(){
+  profileGrid.innerHTML='';
+  profiles.forEach(profile=>{
+    const card=document.createElement('div');
+    card.className='profile-card';
+    card.dataset.id=profile.id;
+    card.innerHTML=`
+      <div class="profile-top">
+        <div class="avatar">${profileInitials(profile.name)}</div>
+        <div>
+          <div class="profile-name">${esc(profile.name)}</div>
+          <div class="profile-role">${esc(profile.role)}</div>
+        </div>
+      </div>
+      <div class="profile-metrics">
+        <div class="profile-metric"><div class="n">${profile.events}</div><div class="l">Active Events</div></div>
+        <div class="profile-metric"><div class="n">${profile.tasks}</div><div class="l">Open Tasks</div></div>
+        <div class="profile-metric"><div class="n">${profile.critical}</div><div class="l">Critical</div></div>
+        <div class="profile-metric"><div class="n">${profile.readiness}%</div><div class="l">Readiness</div></div>
+      </div>
+      <div class="profile-hint">Click anywhere on this profile to open the salesperson's Version 1 workspace.</div>
+      <div class="profile-actions">
+        <button class="edit-profile" type="button">Edit</button>
+        <button class="delete-profile" type="button">Delete</button>
+      </div>
+    `;
+    profileGrid.appendChild(card);
+  });
+  updateTeamScores();
+}
+
+function updateTeamScores(){
+  document.getElementById('teamCount').textContent=profiles.length;
+  document.getElementById('teamEvents').textContent=profiles.reduce((a,p)=>a+Number(p.events||0),0);
+  document.getElementById('teamTasks').textContent=profiles.reduce((a,p)=>a+Number(p.tasks||0),0);
+  document.getElementById('teamCritical').textContent=profiles.reduce((a,p)=>a+Number(p.critical||0),0);
+}
+
+function openProfile(profile){
+  selectedAvatar.textContent=profileInitials(profile.name);
+  selectedProfileName.textContent=profile.name;
+  selectedProfileRole.textContent=profile.role;
+  salesTeamDashboard.classList.add('hidden');
+  profileWorkspace.classList.remove('hidden');
+
+  // Always open the finalized Version 1 on Planning first.
+  switchWorkspace('planning');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function showProfileModal(profile=null){
+  editingProfileId=profile?profile.id:null;
+  modalTitle.textContent=profile?'Edit Salesperson':'Add Salesperson';
+  profileNameInput.value=profile?.name||'';
+  profileRoleInput.value=profile?.role||'';
+  profileEventsInput.value=profile?.events??1;
+  profileTasksInput.value=profile?.tasks??0;
+  profileCriticalInput.value=profile?.critical??0;
+  profileReadinessInput.value=profile?.readiness??0;
+  modalBackdrop.classList.remove('hidden');
+  modalBackdrop.setAttribute('aria-hidden','false');
+  profileNameInput.focus();
+}
+
+function closeProfileModal(){
+  modalBackdrop.classList.add('hidden');
+  modalBackdrop.setAttribute('aria-hidden','true');
+  editingProfileId=null;
+}
+
+profileGrid.addEventListener('click',e=>{
+  const card=e.target.closest('.profile-card');
+  if(!card)return;
+  const profile=profiles.find(p=>p.id===card.dataset.id);
+  if(!profile)return;
+
+  if(e.target.closest('.delete-profile')){
+    e.stopPropagation();
+    if(confirm(`Delete ${profile.name}'s profile?`)){
+      profiles=profiles.filter(p=>p.id!==profile.id);
+      renderProfiles();
+    }
+    return;
+  }
+
+  if(e.target.closest('.edit-profile')){
+    e.stopPropagation();
+    showProfileModal(profile);
+    return;
+  }
+
+  openProfile(profile);
+});
+
+backToTeam.addEventListener('click',()=>{
+  profileWorkspace.classList.add('hidden');
+  salesTeamDashboard.classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+addProfileBtn.addEventListener('click',()=>showProfileModal());
+cancelProfileBtn.addEventListener('click',closeProfileModal);
+
+modalBackdrop.addEventListener('click',e=>{
+  if(e.target===modalBackdrop)closeProfileModal();
+});
+
+saveProfileBtn.addEventListener('click',()=>{
+  const name=profileNameInput.value.trim();
+  const role=profileRoleInput.value.trim();
+  if(!name){
+    profileNameInput.focus();
+    return;
+  }
+
+  const data={
+    name,
+    role:role||'Sales',
+    events:Math.max(0,Number(profileEventsInput.value)||0),
+    tasks:Math.max(0,Number(profileTasksInput.value)||0),
+    critical:Math.max(0,Number(profileCriticalInput.value)||0),
+    readiness:Math.min(100,Math.max(0,Number(profileReadinessInput.value)||0))
+  };
+
+  if(editingProfileId){
+    const index=profiles.findIndex(p=>p.id===editingProfileId);
+    if(index>=0)profiles[index]={...profiles[index],...data};
+  }else{
+    profiles.push({
+      id:'profile_'+Date.now(),
+      ...data
+    });
+  }
+
+  renderProfiles();
+  closeProfileModal();
+});
+
+renderProfiles();
+
+</script>
+</div>
+
+</body>
+</html>
